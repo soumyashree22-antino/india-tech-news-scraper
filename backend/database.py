@@ -2,7 +2,13 @@ import sqlite3
 import os
 from datetime import datetime, timezone
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "news.db")
+db_env = os.environ.get("DATABASE_URL", "")
+if db_env.startswith("sqlite:///"):
+    DB_PATH = db_env.replace("sqlite:///", "")
+elif db_env:
+    DB_PATH = db_env
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "news.db")
 
 def get_connection():
     return sqlite3.connect(DB_PATH, check_same_thread=False)

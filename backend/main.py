@@ -59,6 +59,12 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 # NEW DB-BACKED ENDPOINTS
 # ---------------------------------------------------------------------------
 
+@app.get("/", tags=["Status"])
+@app.head("/", tags=["Status"])
+async def root():
+    """Health check endpoint for Render."""
+    return {"status": "ok", "message": "News Scraper API is running."}
+
 @app.get("/api/articles", tags=["Database"])
 async def get_articles():
     """Returns all articles from DB."""
