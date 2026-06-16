@@ -6,3 +6,4 @@ python-dateutil
 beautifulsoup4
 groq
 python-dotenv
+trafilatura
