@@ -220,21 +220,7 @@ export default function ArticleCard({ article, isExpanded, darkMode = true, onRe
           >
             Read Article <ExternalLink size={12} />
           </a>
-          {onReadInApp && (
-            <button
-              onClick={() => onReadInApp(article)}
-              style={{
-                fontSize: 13, fontWeight: 600, color: '#6366f1',
-                backgroundColor: 'transparent', border: 'none', cursor: 'pointer',
-                fontFamily: 'Inter', transition: 'opacity 0.15s',
-                textDecoration: 'underline', textUnderlineOffset: 3,
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-            >
-              Read in-app
-            </button>
-          )}
+
         </div>
 
         {/* Summarize button */}

@@ -27,13 +27,18 @@ async def lifespan(app: FastAPI):
     # Startup
     print("[FastAPI] Initializing Database...")
     init_db()
-    print("[FastAPI] Starting Scheduler...")
-    setup_scheduler()
-    scheduler.start()
+    
+    if not os.environ.get("VERCEL"):
+        print("[FastAPI] Starting Scheduler...")
+        setup_scheduler()
+        scheduler.start()
+        
     yield
+    
     # Shutdown
-    print("[FastAPI] Shutting down Scheduler...")
-    scheduler.shutdown()
+    if not os.environ.get("VERCEL"):
+        print("[FastAPI] Shutting down Scheduler...")
+        scheduler.shutdown()
 
 app = FastAPI(
     title="India Tech News Scraper API",
