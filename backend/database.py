@@ -2,7 +2,11 @@ import sqlite3
 import os
 from datetime import datetime, timezone
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "news.db")
+# Vercel's file system is read-only except for the /tmp directory.
+if os.environ.get("VERCEL"):
+    DB_PATH = "/tmp/news.db"
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "news.db")
 
 def get_connection():
     return sqlite3.connect(DB_PATH, check_same_thread=False)
