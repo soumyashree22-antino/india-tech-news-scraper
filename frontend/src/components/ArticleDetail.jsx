@@ -320,39 +320,7 @@ export default function ArticleDetail({ article, onBack, darkMode = false, onPre
           {summaryError && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 10 }}>{summaryError}</p>}
         </div>
 
-        {/* Full Article Text */}
-        <div>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: textColor, marginBottom: 20 }}>Full Article</h2>
 
-          {isFetchingText && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[100, 90, 95, 80, 100, 85, 70, 90].map((w, i) => (
-                <div key={i} className="skeleton" style={{ width: `${w}%`, height: 18, borderRadius: 6 }} />
-              ))}
-            </div>
-          )}
-
-          {textError && (
-            <div style={{
-              padding: 20, borderRadius: 12, backgroundColor: cardBg,
-              border: `1px solid ${border}`, textAlign: 'center',
-            }}>
-              <p style={{ color: mutedColor, fontSize: 14, marginBottom: 16 }}>{textError}</p>
-              <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: '#6366f1', fontSize: 13, fontWeight: 600 }}>
-                Read on original site →
-              </a>
-            </div>
-          )}
-
-          {fullText && !isFetchingText && (
-            <div style={{
-              fontSize: 16, color: darkMode ? '#ccc' : '#333',
-              lineHeight: 1.85, whiteSpace: 'pre-wrap', fontWeight: 400,
-            }}>
-              {fullText}
-            </div>
-          )}
-        </div>
       </div>
     </motion.div>
   );

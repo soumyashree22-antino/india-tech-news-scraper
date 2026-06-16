@@ -123,6 +123,7 @@ export default function ArticleCard({ article, isExpanded, darkMode = true, onRe
       variants={itemVariants}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
+      onClick={() => onReadInApp && onReadInApp(article)}
       whileHover={{ y: -4 }}
       style={{
         display: 'flex',
@@ -135,7 +136,7 @@ export default function ArticleCard({ article, isExpanded, darkMode = true, onRe
         boxShadow: isHovered
           ? `0 8px 30px ${badgeColor}28, 0 0 0 1px ${badgeColor}30`
           : darkMode ? '0 1px 3px rgba(0,0,0,0.5)' : '0 1px 3px rgba(0,0,0,0.08)',
-        cursor: 'default',
+        cursor: onReadInApp ? 'pointer' : 'default',
       }}
     >
       {/* ── Image ── */}
@@ -210,6 +211,7 @@ export default function ArticleCard({ article, isExpanded, darkMode = true, onRe
             href={url}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             style={{
               display: 'flex', alignItems: 'center', gap: 5,
               fontSize: 13, fontWeight: 600, color: '#6366f1',
@@ -228,7 +230,7 @@ export default function ArticleCard({ article, isExpanded, darkMode = true, onRe
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleSummarize}
+            onClick={(e) => { e.stopPropagation(); handleSummarize(); }}
             disabled={isSummarizing}
             style={{
               marginTop: 12,
@@ -310,7 +312,7 @@ export default function ArticleCard({ article, isExpanded, darkMode = true, onRe
               }}>
                 {!hasDbSummary && (
                   <button
-                    onClick={() => setShowSummary(false)}
+                    onClick={(e) => { e.stopPropagation(); setShowSummary(false); }}
                     style={{
                       position: 'absolute', top: 10, right: 10,
                       width: 24, height: 24, borderRadius: 6,
