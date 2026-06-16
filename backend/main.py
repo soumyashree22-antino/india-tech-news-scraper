@@ -15,7 +15,7 @@ load_dotenv()
 from scrapers.orchestrator import scrape_source, scrape_all
 from summarizer import summarize, fetch_article_text
 from database import init_db, get_all_articles, get_today_articles, get_articles_by_source
-from scheduler import scheduler, setup_scheduler, run_pipeline_job
+from pipeline import run_pipeline_job
 
 class SummarizeRequest(BaseModel):
     url: str
@@ -27,18 +27,9 @@ async def lifespan(app: FastAPI):
     # Startup
     print("[FastAPI] Initializing Database...")
     init_db()
-    
-    if not os.environ.get("VERCEL"):
-        print("[FastAPI] Starting Scheduler...")
-        setup_scheduler()
-        scheduler.start()
-        
     yield
     
     # Shutdown
-    if not os.environ.get("VERCEL"):
-        print("[FastAPI] Shutting down Scheduler...")
-        scheduler.shutdown()
 
 app = FastAPI(
     title="India Tech News Scraper API",
@@ -108,22 +99,7 @@ async def trigger_manual_scrape():
         "message": "Manual pipeline execution completed. Check server logs for details."
     }
 
-@app.get("/api/scrape/cron", tags=["Pipeline"])
-async def vercel_cron_scrape(request: Request):
-    """Triggered automatically by Vercel Cron."""
-    # Optional but highly recommended: verify Vercel CRON_SECRET to prevent unauthorized triggers
-    auth_header = request.headers.get("authorization")
-    cron_secret = os.environ.get("CRON_SECRET")
-    
-    if cron_secret and auth_header != f"Bearer {cron_secret}":
-        return JSONResponse(status_code=401, content={"success": False, "error": "Unauthorized cron trigger."})
-        
-    print("[API] Vercel Cron triggered daily scrape!")
-    await run_pipeline_job(is_manual=False)
-    return {
-        "success": True,
-        "message": "Cron pipeline executed successfully."
-    }
+
 
 @app.get("/api/status", tags=["Status"])
 async def get_status():
@@ -132,12 +108,7 @@ async def get_status():
     today_db = len(get_today_articles())
     
     last_run = "Unknown"
-    next_run = "Unknown"
-    
-    if scheduler.running:
-        job = scheduler.get_job("daily_news_pipeline")
-        if job:
-            next_run = job.next_run_time.isoformat() if job.next_run_time else "None"
+    next_run = "Manual trigger only"
             
     return {
         "success": True,
