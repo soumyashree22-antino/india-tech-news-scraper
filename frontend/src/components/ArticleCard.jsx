@@ -81,7 +81,8 @@ export default function ArticleCard({ article, isExpanded, darkMode = true, onRe
     setFullTextError('');
     setShowFullText(true);
     try {
-      const res = await fetch('/api/article/text', {
+      const API_BASE = process.env.REACT_APP_API_URL || '';
+      const res = await fetch(`${API_BASE}/api/article/text`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
@@ -99,7 +100,8 @@ export default function ArticleCard({ article, isExpanded, darkMode = true, onRe
     setErrorMsg('');
     setShowSummary(true);
     try {
-      const res = await fetch('/api/summarize', {
+      const API_BASE = process.env.REACT_APP_API_URL || '';
+      const res = await fetch(`${API_BASE}/api/summarize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, title, summary: '' }),

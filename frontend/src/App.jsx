@@ -89,7 +89,8 @@ export default function App() {
   const fetchArticles = useCallback(async (filter) => {
     setLoading(true);
     try {
-      const endpoint = filter === 'today' ? '/api/articles/today' : '/api/articles';
+      const API_BASE = process.env.REACT_APP_API_URL || '';
+      const endpoint = filter === 'today' ? `${API_BASE}/api/articles/today` : `${API_BASE}/api/articles`;
       const res = await fetch(endpoint);
       const data = await res.json();
       if (data.success) setArticles(data.articles || []);
@@ -102,7 +103,8 @@ export default function App() {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/status');
+      const API_BASE = process.env.REACT_APP_API_URL || '';
+      const res = await fetch(`${API_BASE}/api/status`);
       const data = await res.json();
       if (data.success) setStatus(data);
     } catch (err) {
@@ -144,7 +146,8 @@ export default function App() {
 
   const handleManualScrape = async () => {
     setIsScraping(true);
-    const scrapePromise = fetch('/api/scrape/manual', { method: 'POST' })
+    const API_BASE = process.env.REACT_APP_API_URL || '';
+    const scrapePromise = fetch(`${API_BASE}/api/scrape/manual`, { method: 'POST' })
       .then(async () => { await fetchStatus(); await fetchArticles(dateFilter); })
       .catch(err => { console.error('[App] Manual scrape failed:', err); throw err; })
       .finally(() => setIsScraping(false));
