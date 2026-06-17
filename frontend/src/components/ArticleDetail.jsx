@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ExternalLink, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Sparkles, ChevronLeft, ChevronRight, Newspaper, Zap, CheckCircle } from 'lucide-react';
 
 const SOURCE_COLORS = {
   'Times of India': '#ef4444',
@@ -21,21 +21,26 @@ const STOCK_IMAGES = [
   'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80',
 ];
 
-function formatBullets(text) {
+function formatBullets(text, mutedColor) {
   if (!text) return null;
   const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-  if (lines.length > 1 || text.startsWith('-') || text.startsWith('*')) {
-    return (
-      <ul style={{ paddingLeft: 22, margin: '8px 0 0', listStyleType: 'disc' }}>
-        {lines.map((line, i) => (
-          <li key={i} style={{ fontSize: 15, color: '#666', lineHeight: 1.7, marginBottom: i < lines.length - 1 ? 6 : 0 }}>
+  const items = lines.length > 1 || text.startsWith('-') || text.startsWith('*') ? lines : [text];
+  return (
+    <ul style={{ paddingLeft: 0, margin: '8px 0 0', listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {items.map((line, i) => (
+        <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <span style={{
+            flexShrink: 0, marginTop: 6,
+            width: 6, height: 6, borderRadius: '50%',
+            backgroundColor: mutedColor, display: 'inline-block',
+          }} />
+          <span style={{ fontSize: 14, color: mutedColor, lineHeight: 1.6 }}>
             {line.replace(/^[-*]\s*/, '')}
-          </li>
-        ))}
-      </ul>
-    );
-  }
-  return <p style={{ fontSize: 15, color: '#666', lineHeight: 1.7, marginTop: 8 }}>{text}</p>;
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 function formatDate(dateStr) {
@@ -53,45 +58,18 @@ export default function ArticleDetail({ article, onBack, darkMode = false, onPre
   const formattedDate = formatDate(date);
   const displayImage = image_url || STOCK_IMAGES[(title?.length || 0) % STOCK_IMAGES.length];
 
-  const bg = darkMode ? '#080808' : '#ffffff';
-  const cardBg = darkMode ? '#111111' : '#f9f9f9';
-  const border = darkMode ? '#222' : '#e5e5e5';
-  const textColor = darkMode ? '#ffffff' : '#0a0a0a';
-  const mutedColor = darkMode ? '#888' : '#666';
-  const subtleColor = darkMode ? '#555' : '#999';
+  const bg          = darkMode ? '#080808' : '#f4f4f6';
+  const cardBg      = darkMode ? '#111111' : '#ffffff';
+  const border      = darkMode ? '#222' : '#e0e0e8';
+  const textColor   = darkMode ? '#ffffff' : '#0a0a0a';
+  const mutedColor  = darkMode ? '#aaa' : '#4b5563';
+  const subtleColor = darkMode ? '#555' : '#9ca3af';
 
   const hasDbSummary = summary && summary.what;
   const [summaryData, setSummaryData] = useState(hasDbSummary ? summary : null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [summaryError, setSummaryError] = useState('');
   const [showSummary, setShowSummary] = useState(!!hasDbSummary);
-
-  const [fullText, setFullText] = useState('');
-  const [isFetchingText, setIsFetchingText] = useState(false);
-  const [textError, setTextError] = useState('');
-
-  // Auto-fetch article full text on mount
-  useEffect(() => {
-    const fetchText = async () => {
-      setIsFetchingText(true);
-      try {
-        const API_BASE = process.env.REACT_APP_API_URL || '';
-        const res = await fetch(`${API_BASE}/api/article/text`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url }),
-        });
-        const data = await res.json();
-        if (data.success && data.text) setFullText(data.text);
-        else setTextError('Could not fetch the article text. Open the original link instead.');
-      } catch {
-        setTextError('Failed to load article text.');
-      } finally {
-        setIsFetchingText(false);
-      }
-    };
-    fetchText();
-  }, [url]);
 
   const handleSummarize = async () => {
     if (summaryData) { setShowSummary(true); return; }
@@ -113,216 +91,260 @@ export default function ArticleDetail({ article, onBack, darkMode = false, onPre
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -16 }}
-      transition={{ duration: 0.28 }}
-      style={{ minHeight: '100vh', backgroundColor: bg, fontFamily: 'Inter, sans-serif' }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ 
+        height: '100vh', 
+        width: '100vw',
+        overflow: 'hidden', 
+        backgroundColor: bg, 
+        fontFamily: 'Inter, sans-serif',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
     >
-      {/* ── Top Nav ── */}
+      {/* ── Header (Fixed Height) ── */}
       <div style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        backgroundColor: bg,
+        height: 64, flexShrink: 0,
+        backgroundColor: darkMode ? 'rgba(8,8,8,0.85)' : 'rgba(255,255,255,0.85)',
         borderBottom: `1px solid ${border}`,
-        padding: '0 16px',
-        height: 56,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-        backdropFilter: 'blur(10px)',
+        padding: '0 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        backdropFilter: 'blur(16px)', zIndex: 50,
       }}>
-        {/* Left: Back button */}
-        <button
-          onClick={onBack}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '7px 14px', borderRadius: 9,
-            border: `1px solid ${border}`,
-            backgroundColor: 'transparent',
-            color: mutedColor, fontSize: 13, fontWeight: 500,
-            cursor: 'pointer', fontFamily: 'Inter', transition: 'all 0.15s',
-            whiteSpace: 'nowrap', flexShrink: 0,
-          }}
-          onMouseEnter={e => { e.currentTarget.style.color = textColor; e.currentTarget.style.borderColor = textColor; }}
-          onMouseLeave={e => { e.currentTarget.style.color = mutedColor; e.currentTarget.style.borderColor = border; }}
-        >
-          <ArrowLeft size={14} />
-          Back to feed
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={onBack}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 16px', borderRadius: 12,
+              border: `1px solid ${border}`, backgroundColor: cardBg,
+              color: textColor, fontSize: 14, fontWeight: 600,
+              cursor: 'pointer', transition: 'all 0.2s',
+            }}
+          >
+            <ArrowLeft size={16} /> Back
+          </button>
 
-        {/* Centre: Prev / counter / Next — only in single-view mode */}
-        {onPrev && onNext && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <button
-              onClick={onPrev}
-              disabled={!hasPrev}
-              style={{
-                padding: '7px 14px', borderRadius: 9,
-                border: `1px solid ${border}`, backgroundColor: 'transparent',
-                color: hasPrev ? textColor : subtleColor,
-                fontSize: 13, fontWeight: 500, cursor: hasPrev ? 'pointer' : 'not-allowed',
-                fontFamily: 'Inter', transition: 'all 0.15s', opacity: hasPrev ? 1 : 0.4,
-              }}
-            >
-              ← Prev
-            </button>
-            <span style={{ fontSize: 12, color: subtleColor, padding: '0 8px', whiteSpace: 'nowrap' }}>
-              {currentIndex + 1} / {total}
-            </span>
-            <button
-              onClick={onNext}
-              disabled={!hasNext}
-              style={{
-                padding: '7px 14px', borderRadius: 9,
-                border: `1px solid ${border}`, backgroundColor: 'transparent',
-                color: hasNext ? textColor : subtleColor,
-                fontSize: 13, fontWeight: 500, cursor: hasNext ? 'pointer' : 'not-allowed',
-                fontFamily: 'Inter', transition: 'all 0.15s', opacity: hasNext ? 1 : 0.4,
-              }}
-            >
-              Next →
-            </button>
-          </div>
-        )}
+          {onPrev && onNext && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8 }}>
+              <button onClick={onPrev} disabled={!hasPrev} style={{
+                width: 36, height: 36, borderRadius: 10, border: `1px solid ${border}`,
+                backgroundColor: cardBg, color: hasPrev ? textColor : subtleColor,
+                cursor: hasPrev ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                opacity: hasPrev ? 1 : 0.5, transition: 'all 0.2s'
+              }}>
+                <ChevronLeft size={18} />
+              </button>
+              <button onClick={onNext} disabled={!hasNext} style={{
+                width: 36, height: 36, borderRadius: 10, border: `1px solid ${border}`,
+                backgroundColor: cardBg, color: hasNext ? textColor : subtleColor,
+                cursor: hasNext ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                opacity: hasNext ? 1 : 0.5, transition: 'all 0.2s'
+              }}>
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
+        </div>
 
-        {/* Right: Open original */}
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '7px 14px', borderRadius: 9,
-            border: '1px solid #6366f1',
-            backgroundColor: '#6366f115',
-            color: '#6366f1', fontSize: 13, fontWeight: 500,
-            textDecoration: 'none', cursor: 'pointer', transition: 'all 0.15s',
-            whiteSpace: 'nowrap', flexShrink: 0,
-          }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#6366f125'}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = '#6366f115'}
-        >
-          Open original <ExternalLink size={12} />
+        <a href={url} target="_blank" rel="noopener noreferrer" style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '8px 20px', borderRadius: 12, backgroundColor: '#000',
+          color: '#fff', fontSize: 14, fontWeight: 600,
+          textDecoration: 'none', transition: 'all 0.2s',
+        }}>
+          Read Full Article <ExternalLink size={14} />
         </a>
       </div>
 
-      {/* ── Hero Image ── */}
-      <div style={{ position: 'relative', width: '100%', height: 420, overflow: 'hidden' }}>
-        <img
-          src={displayImage}
-          alt={title}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          onError={e => { e.currentTarget.src = STOCK_IMAGES[0]; }}
-        />
-        {/* Strong gradient fade to background */}
+      {/* ── Main Dashboard Area (Fills remaining height perfectly) ── */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        gap: 24,
+        padding: 24,
+        overflow: 'hidden', // No scrolling allowed on the main wrapper
+      }}>
+        
+        {/* ── LEFT PANEL: Hero Card ── */}
         <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: '65%',
-          background: `linear-gradient(to bottom, transparent 0%, ${bg} 100%)`,
-        }} />
-        {/* Source badge */}
-        <div style={{
-          position: 'absolute', bottom: 24, left: 40,
-          display: 'flex', alignItems: 'center', gap: 7,
-          padding: '5px 14px', borderRadius: 999,
-          backgroundColor: `${badgeColor}20`,
-          border: `1px solid ${badgeColor}`,
+          flex: '0 0 40%', 
+          position: 'relative',
+          borderRadius: 24,
+          overflow: 'hidden',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-end',
+          backgroundColor: '#000'
         }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: badgeColor }} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: badgeColor, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            {source}
-          </span>
-        </div>
-      </div>
-
-      {/* ── Article Content ── */}
-      <div style={{ maxWidth: 780, margin: '0 auto', padding: '0 24px 80px' }}>
-
-        {/* Date */}
-        {formattedDate && (
-          <p style={{ fontSize: 13, color: subtleColor, marginBottom: 12 }}>{formattedDate}</p>
-        )}
-
-        {/* Title */}
-        <h1 style={{
-          fontSize: 36, fontWeight: 800, color: textColor,
-          lineHeight: 1.25, letterSpacing: '-0.5px', marginBottom: 24,
-          fontFamily: 'Inter, sans-serif',
-        }}>
-          {title}
-        </h1>
-
-        {/* AI Summary Card */}
-        <div style={{
-          backgroundColor: cardBg,
-          border: `1px solid ${border}`,
-          borderLeft: `4px solid ${badgeColor}`,
-          borderRadius: 12, padding: 24, marginBottom: 40,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Sparkles size={15} color="#6366f1" />
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                AI Summary
-              </span>
+          <img
+            src={displayImage}
+            alt={title}
+            style={{ 
+              position: 'absolute', inset: 0, 
+              width: '100%', height: '100%', objectFit: 'cover', 
+              opacity: 0.6 
+            }}
+            onError={e => { e.currentTarget.src = STOCK_IMAGES[0]; }}
+          />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.85) 100%)',
+          }} />
+          
+          <div style={{ position: 'relative', padding: 32, zIndex: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 999,
+                backgroundColor: badgeColor,
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {source}
+                </span>
+              </div>
+              {formattedDate && (
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>{formattedDate}</span>
+              )}
             </div>
+            
+            <h1 style={{
+              fontSize: 32, fontWeight: 800, color: '#fff',
+              lineHeight: 1.25, letterSpacing: '-0.02em', margin: 0,
+            }}>
+              {title}
+            </h1>
+          </div>
+        </div>
+
+        {/* ── RIGHT PANEL: AI Summary Grid ── */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: cardBg,
+          borderRadius: 24,
+          border: `1px solid ${border}`,
+          padding: 24,
+          overflow: 'hidden', // Ensures the panel itself never scrolls outside
+          boxShadow: '0 10px 30px rgba(0,0,0,0.02)'
+        }}>
+          
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexShrink: 0 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Sparkles size={18} color="#fff" />
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: textColor, margin: 0 }}>AI Digest</h2>
+            
             {!showSummary && !isSummarizing && (
               <button
                 onClick={handleSummarize}
                 style={{
-                  padding: '6px 14px', borderRadius: 8,
-                  border: '1px solid #6366f1',
-                  backgroundColor: '#6366f115', color: '#6366f1',
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter',
+                  marginLeft: 'auto', padding: '8px 20px', borderRadius: 10,
+                  background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                  color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer',
                 }}
               >
                 Generate Summary
               </button>
             )}
-            {showSummary && summaryData && (
-              <button onClick={() => setShowSummary(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: subtleColor }}>
-                <X size={14} />
-              </button>
-            )}
           </div>
 
-          <AnimatePresence mode="wait">
-            {isSummarizing && (
-              <motion.div key="skel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {[['40%', 14], ['90%', 20], ['70%', 20], ['35%', 14], ['85%', 40]].map(([w, h], i) => (
-                    <div key={i} className="skeleton" style={{ width: w, height: h, borderRadius: 6 }} />
-                  ))}
-                </div>
-              </motion.div>
-            )}
-            {showSummary && summaryData && (
-              <motion.div key="summary" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                  {[
-                    { icon: '📌', label: 'What is the news?', content: summaryData.what, isText: true },
-                    { icon: '🔍', label: 'Why / How?', content: summaryData.why_how, isText: false },
-                    { icon: '✅', label: 'Conclusion', content: summaryData.conclusion, isText: true },
-                  ].map(({ icon, label, content, isText }, i, arr) => (
-                    <div key={label}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: textColor, marginBottom: 4 }}>{icon} {label}</p>
-                      {isText
-                        ? <p style={{ fontSize: 15, color: mutedColor, lineHeight: 1.7 }}>{content}</p>
-                        : formatBullets(content)
-                      }
-                      {i < arr.length - 1 && <div style={{ height: 1, backgroundColor: border, marginTop: 18 }} />}
+          <div style={{ height: 1, backgroundColor: border, marginBottom: 20, flexShrink: 0 }} />
+
+          {/* Grid Content */}
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <AnimatePresence mode="wait">
+              {isSummarizing && (
+                <motion.div key="skel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ height: '100%' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16, height: '100%' }}>
+                    <div className="skeleton" style={{ width: '100%', height: '30%', borderRadius: 16 }} />
+                    <div style={{ display: 'flex', gap: 16, flex: 1 }}>
+                      <div className="skeleton" style={{ flex: 1, borderRadius: 16 }} />
+                      <div className="skeleton" style={{ flex: 1, borderRadius: 16 }} />
                     </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-            {!showSummary && !isSummarizing && (
-              <motion.p key="prompt" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontSize: 14, color: mutedColor }}>
-                Click "Generate Summary" to get an AI-powered breakdown of this article.
-              </motion.p>
-            )}
-          </AnimatePresence>
-          {summaryError && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 10 }}>{summaryError}</p>}
+                  </div>
+                </motion.div>
+              )}
+
+              {showSummary && summaryData && (
+                <motion.div key="summary" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ height: '100%' }}>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr', 
+                    gridTemplateRows: 'auto minmax(0, 1fr)', 
+                    gap: 16, 
+                    height: '100%' 
+                  }}>
+                    
+                    {/* What is the news (Spans full width top) */}
+                    <div style={{
+                      gridColumn: '1 / -1',
+                      padding: 20, borderRadius: 16,
+                      backgroundColor: darkMode ? '#1a1a1a' : '#f9fafb',
+                      border: `1px solid ${border}`, borderLeft: `4px solid ${textColor}`,
+                      display: 'flex', flexDirection: 'column'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <Newspaper size={16} color={textColor} />
+                        <span style={{ fontSize: 13, fontWeight: 700, color: textColor, textTransform: 'uppercase' }}>What is the news?</span>
+                      </div>
+                      <p style={{ fontSize: 15, color: textColor, margin: 0, fontWeight: 500, lineHeight: 1.5 }}>
+                        {summaryData.what}
+                      </p>
+                    </div>
+
+                    {/* Why / How (Left Column, Scrollable internally if needed) */}
+                    <div style={{
+                      padding: 20, borderRadius: 16,
+                      backgroundColor: darkMode ? '#1a1a1a' : '#f9fafb',
+                      border: `1px solid ${border}`, borderLeft: `4px solid ${textColor}`,
+                      display: 'flex', flexDirection: 'column',
+                      overflowY: 'auto'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexShrink: 0 }}>
+                        <Zap size={16} color={textColor} />
+                        <span style={{ fontSize: 13, fontWeight: 700, color: textColor, textTransform: 'uppercase' }}>Why / How?</span>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        {formatBullets(summaryData.why_how, mutedColor)}
+                      </div>
+                    </div>
+
+                    {/* Conclusion (Right Column, Scrollable internally if needed) */}
+                    <div style={{
+                      padding: 20, borderRadius: 16,
+                      backgroundColor: darkMode ? '#1a1a1a' : '#f9fafb',
+                      border: `1px solid ${border}`, borderLeft: `4px solid ${textColor}`,
+                      display: 'flex', flexDirection: 'column',
+                      overflowY: 'auto'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexShrink: 0 }}>
+                        <CheckCircle size={16} color={textColor} />
+                        <span style={{ fontSize: 13, fontWeight: 700, color: textColor, textTransform: 'uppercase' }}>Conclusion</span>
+                      </div>
+                      <p style={{ fontSize: 14, color: mutedColor, margin: 0, lineHeight: 1.6 }}>
+                        {summaryData.conclusion}
+                      </p>
+                    </div>
+
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {summaryError && <p style={{ color: '#ef4444', fontSize: 13, margin: '12px 0 0' }}>{summaryError}</p>}
         </div>
-
-
       </div>
     </motion.div>
   );
